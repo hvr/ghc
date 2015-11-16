@@ -1,0 +1,30 @@
+GhcLibWays = v
+V=0
+
+#GhcUnregisterised    = NO
+#GhcWithNativeCodeGen = YES
+GhcThreaded          = NO
+
+#INTEGER_LIBRARY    = integer-simple
+#Stage1Only         = YES
+#stage=1
+
+DYNAMIC_BY_DEFAULT   = NO
+DYNAMIC_GHC_PROGRAMS = NO
+
+SRC_HC_OPTS          = -O -H64m
+GhcStage1HcOpts      = -O
+GhcStage2HcOpts      = -O2
+GhcHcOpts            = -Rghc-timing
+GhcLibHcOpts         = -O2
+
+# minor optimization
+GhcRtsCcOpts= -O2 -fomit-frame-pointer -g -mfull-toc
+
+SplitObjs            = NO
+HADDOCK_DOCS         = NO
+BUILD_DOCBOOK_HTML   = NO
+BUILD_DOCBOOK_PS     = NO
+BUILD_DOCBOOK_PDF    = NO
+
+# EOF

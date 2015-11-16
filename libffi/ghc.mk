@@ -106,7 +106,7 @@ $(libffi_STAMP_CONFIGURE): $(TOUCH_DEP)
 	    AR=$(AR_STAGE1) \
 	    NM=$(NM) \
 	    RANLIB=$(REAL_RANLIB_CMD) \
-        CFLAGS="$(SRC_CC_OPTS) $(CONF_CC_OPTS_STAGE1) -w" \
+        CFLAGS="$(SRC_CC_OPTS) $(CONF_CC_OPTS_STAGE1) -mfull-toc -w" \
         LDFLAGS="$(SRC_LD_OPTS) -w" \
         "$(SHELL)" ./configure \
 	          --prefix=$(TOP)/libffi/build/inst \

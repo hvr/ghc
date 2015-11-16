@@ -598,6 +598,11 @@ AC_DEFUN([FPTOOLS_SET_C_LD_FLAGS],
         $2="$$2 -mminimal-toc -D_THREAD_SAFE"
         $3="$$3 -mminimal-toc -D_THREAD_SAFE"
         $5="$$5 -D_THREAD_SAFE"
+
+        # LOCAL HACK
+        $2="$$2 -mcpu=power6"
+        $3="$$3 -mcpu=power6 -Wl,-blibpath:/opt/freeware/lib:/usr/lib:lib"
+        $4="$$4 -blibpath:/opt/freeware/lib:/usr/lib:lib"
         ;;
 
     esac
