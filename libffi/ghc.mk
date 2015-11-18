@@ -79,6 +79,10 @@ $(libffi_STAMP_CONFIGURE): $(TOUCH_DEP)
 	mv libffi/build/Makefile.in libffi/build/Makefile.in.orig
 	sed 's:@toolexeclibdir@:$$(libdir):g' < libffi/build/Makefile.in.orig > libffi/build/Makefile.in
 
+	# See GHC #11109
+	mv libffi/build/Makefile.in libffi/build/Makefile.in.orig
+	sed 's:@INSTALL@:$$(subst ../install-sh,$(TOP)/install-sh,@INSTALL@):g' < libffi/build/Makefile.in.orig > libffi/build/Makefile.in
+
 # * Because -Werror may be in SRC_CC_OPTS/SRC_LD_OPTS, we need to turn
 #   warnings off or the compilation of libffi might fail due to warnings;
 #   hence the -w flags.
