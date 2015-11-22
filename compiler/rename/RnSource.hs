@@ -31,6 +31,7 @@ import Module
 import HscTypes         ( Warnings(..), plusWarns )
 import Class            ( FunDep )
 import PrelNames        ( isUnboundName )
+import qualified PrelNames as PN
 import Name
 import NameSet
 import NameEnv
@@ -449,6 +450,63 @@ rnSrcInstDecl (ClsInstD { cid_inst = cid })
   = do { (cid', fvs) <- rnClsInstDecl cid
        ; return (ClsInstD { cid_inst = cid' }, fvs) }
 
+-- | Warn about unsound/non-canonical 'Applicative'/'Monad' instance
+-- declarations. Specifically the following conditions are verified:
+--
+-- In 'Monad' instances declarations:
+--
+--  * If 'return' is overridden it must be canonical (i.e. @return = pure@).
+--  * If '(>>)' is overridden it must be canonical (i.e. @(>>) = (*>)@).
+--
+-- In 'Applicative' instance declarations:
+--
+--  * Warn if 'pure' is defined backwards (i.e. @pure = return@)
+--  * Warn if '(*>)' is defined backwards (i.e. @(*>) = (>>)@)
+--
+-- See <https://ghc.haskell.org/wiki/Proposal/MonadOfNoReturn> for
+-- more information
+checkMrpWarnings :: Name -> LHsBinds Name -> RnM ()
+checkMrpWarnings cls mbinds
+  | cls == PN.applicativeClassName  = do
+      forM_ mbinds $ \mbind -> do
+          case unLoc mbind of
+              FunBind { fun_id = L _ name, fun_matches = mg }
+                  | name == PN.pureAName
+                  , isAliasMG mg == Just PN.returnMName
+                  -> addWarn (text "pure = return")
+
+                  | name == PN.thenAName
+                  , isAliasMG mg == Just PN.thenMName
+                  -> addWarn (text "(*>) = (>>)")
+
+              _          -> pure ()
+
+  | cls == PN.monadClassName  = do
+      forM_ mbinds $ \mbind -> do
+          case unLoc mbind of
+              FunBind { fun_id = L _ name, fun_matches = mg }
+                  | name == PN.returnMName
+                  , isAliasMG mg /= Just PN.pureAName
+                  -> addWarn (text "return /= pure")
+
+                  | name == PN.thenMName
+                  , isAliasMG mg /= Just PN.thenAName
+                  -> addWarn (text "(>>) /= (*>)")
+
+              _          -> pure ()
+
+  | otherwise = pure ()
+  where
+    -- | test whether MatchGroup represents a trivial
+    -- "lhsName = rhsName" binding, and return 'Just rhsName' if this is the case
+    isAliasMG :: MatchGroup Name (LHsExpr Name) -> Maybe Name
+    isAliasMG MG {mg_alts = L _ [L _ (Match { m_pats = [], m_grhss = grhss })]}
+        | GRHSs [L _ (GRHS [] body)] lbinds <- grhss
+        , L _ EmptyLocalBinds <- lbinds
+        , L _ (HsVar rhsName) <- body  = Just rhsName
+    isAliasMG _ = Nothing
+
+
 rnClsInstDecl :: ClsInstDecl RdrName -> RnM (ClsInstDecl Name, FreeVars)
 rnClsInstDecl (ClsInstDecl { cid_poly_ty = inst_ty, cid_binds = mbinds
                            , cid_sigs = uprags, cid_tyfam_insts = ats
@@ -472,6 +530,8 @@ rnClsInstDecl (ClsInstDecl { cid_poly_ty = inst_ty, cid_binds = mbinds
         -- (Slightly strangely) when scoped type variables are on, the
         -- forall-d tyvars scope over the method bindings too
        ; (mbinds', uprags', meth_fvs) <- rnMethodBinds False cls ktv_names mbinds uprags
+
+       ; checkMrpWarnings cls mbinds'
 
        -- Rename the associated types, and type signatures
        -- Both need to have the instance type variables in scope
