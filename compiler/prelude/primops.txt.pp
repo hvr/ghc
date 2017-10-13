@@ -1398,6 +1398,17 @@ primop  WriteByteArrayOp_Word64 "writeWord64Array#" GenPrimOp
    with has_side_effects = True
         can_fail = True
 
+primop  CompareByteArraysOp "compareByteArrays#" GenPrimOp
+   ByteArray# -> Int# -> ByteArray# -> Int# -> Int# -> Int#
+   {Compare range of the first ByteArray# to the range of the second ByteArray#.
+    Both arrays must fully contain the specified ranges, but this is not checked.
+    Returns a value less than, equal to, or greater than zero if the
+    range is found, respectively, to be byte-wise lexicographically
+    less than, to match, or be greater than the second range.}
+   with
+   out_of_line = True
+   can_fail = True
+
 primop  CopyByteArrayOp "copyByteArray#" GenPrimOp
   ByteArray# -> Int# -> MutableByteArray# s -> Int# -> Int# -> State# s -> State# s
   {Copy a range of the ByteArray# to the specified region in the MutableByteArray#.
