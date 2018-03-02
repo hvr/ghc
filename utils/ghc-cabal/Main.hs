@@ -392,6 +392,7 @@ generate directory distdir config_args
       let variablePrefix = directory ++ '_':distdir
           mods      = map display modules
           otherMods = map display (otherModules bi)
+          buildDir' = map (\c -> if c=='\\' then '/' else c) $ buildDir lbi
       let xs = [variablePrefix ++ "_VERSION = " ++ display (pkgVersion (package pd)),
                 -- TODO: move inside withLibLBI
                 variablePrefix ++ "_COMPONENT_ID = " ++ localCompatPackageKey lbi,
@@ -406,8 +407,8 @@ generate directory distdir config_args
                 variablePrefix ++ "_TRANSITIVE_DEP_NAMES = " ++ unwords transitiveDepNames,
                 variablePrefix ++ "_TRANSITIVE_DEP_COMPONENT_IDS = " ++ unwords transitiveDepLibNames,
                 variablePrefix ++ "_INCLUDE_DIRS = " ++ unwords (  [ dir | dir <- includeDirs bi ]
-                                                                ++ [ buildDir lbi ++ "/" ++ dir | dir <- includeDirs bi
-                                                                                          , not (isAbsolute dir)]),
+                                                                ++ [ buildDir' ++ "/" ++ dir | dir <- includeDirs bi
+                                                                                             , not (isAbsolute dir)]),
                 variablePrefix ++ "_INCLUDES = " ++ unwords (includes bi),
                 variablePrefix ++ "_INSTALL_INCLUDES = " ++ unwords (installIncludes bi),
                 variablePrefix ++ "_EXTRA_LIBRARIES = " ++ unwords (extraLibs bi),
